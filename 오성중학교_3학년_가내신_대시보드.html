@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오성중학교 3학년 내신 성적 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    /* Background palette — warm slate mid-tone */
+    --bg:          #E8EBF2;
+    --bg-card:     #F5F6FA;
+    --bg-inset:    #DDDFE8;
+    --bg-hover:    rgba(255,255,255,0.85);
+
+    /* Header — deep indigo */
+    --header-bg:   #1C2340;
+    --header-border: rgba(255,255,255,0.08);
+
+    /* Accent — periwinkle indigo */
+    --accent:      #5C6BC8;
+    --accent-deep: #3E4EAA;
+    --accent-pale: rgba(92,107,200,0.10);
+
+    /* Supporting colours */
+    --teal:        #28A99E;
+    --teal-pale:   rgba(40,169,158,0.10);
+    --coral:       #D9524B;
+    --coral-pale:  rgba(217,82,75,0.10);
+    --green:       #2EA870;
+    --green-pale:  rgba(46,168,112,0.10);
+    --amber:       #D08B1C;
+    --amber-pale:  rgba(208,139,28,0.10);
+    --purple:      #7A5CC8;
+    --purple-pale: rgba(122,92,200,0.10);
+
+    /* Text */
+    --text:        #1A1F35;
+    --text-sub:    #4A5270;
+    --text-muted:  #7A8298;
+    --text-faint:  #A8B0C4;
+
+    /* Borders */
+    --border:      rgba(26,31,53,0.10);
+    --border-mid:  rgba(26,31,53,0.16);
+
+    /* Shadows */
+    --shadow-xs:   0 1px 3px rgba(26,31,53,0.06);
+    --shadow-sm:   0 2px 8px rgba(26,31,53,0.09);
+    --shadow-md:   0 6px 20px rgba(26,31,53,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* subtle mesh behind content */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% -10%, rgba(92,107,200,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 110%, rgba(40,169,158,0.06) 0%, transparent 60%);
+    pointer-events:none; z-index:0;
+  }
+
+  .container { max-width:1400px; margin:0 auto; padding:0 24px; position:relative; z-index:1; }
+
+  /* ── HEADER ─────────────────────────────────── */
+  header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    padding: 0;
+    position: sticky; top:0; z-index:100;
+    box-shadow: 0 2px 16px rgba(10,14,40,0.28);
+  }
+  .header-inner {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 24px;
+    max-width:1400px; margin:0 auto;
+  }
+  .logo-area { display:flex; align-items:center; gap:13px; }
+  .logo-emblem {
+    width:40px; height:40px; border-radius:10px;
+    background: rgba(92,107,200,0.20);
+    border: 1px solid rgba(92,107,200,0.35);
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  .logo-text h1 {
+    font-size:14px; font-weight:700; color:#EAECF5; letter-spacing:-0.2px;
+  }
+  .logo-text p { font-size:11px; color:rgba(200,206,230,0.55); margin-top:2px; }
+  .header-meta { display:flex; align-items:center; gap:10px; }
+  .badge {
+    padding:5px 12px; border-radius:20px;
+    font-size:11px; font-weight:600; letter-spacing:0.2px;
+  }
+  .badge-blue {
+    background:rgba(92,107,200,0.20); color:#A8B4E8;
+    border:1px solid rgba(92,107,200,0.30);
+  }
+  .badge-teal {
+    background:rgba(40,169,158,0.16); color:#7DD4CF;
+    border:1px solid rgba(40,169,158,0.28);
+  }
+  .header-date { font-size:11px; color:rgba(200,206,230,0.50); }
+
+  /* ── PAGE TITLE ─────────────────────────────── */
+  .page-title-section {
+    padding:34px 0 22px;
+    display:flex; align-items:flex-end; justify-content:space-between;
+  }
+  .page-title h2 {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:40px; letter-spacing:2px;
+    color: var(--text); line-height:1;
+  }
+  .page-title h2 span { color: var(--accent); }
+  .page-title p { font-size:12px; color:var(--text-muted); margin-top:8px; }
+  .title-rule {
+    flex:1; height:1px;
+    background:linear-gradient(to right, var(--border-mid), transparent);
+    margin: 0 28px 8px;
+  }
+
+  /* ── KPI CARDS ──────────────────────────────── */
+  .kpi-grid {
+    display:grid; grid-template-columns:repeat(5,1fr);
+    gap:14px; margin-bottom:26px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius:16px; padding:20px;
+    position:relative; overflow:hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.22s, box-shadow 0.22s;
+    cursor:default;
+  }
+  .kpi-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+  .kpi-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .kpi-card.blue::before   { background:linear-gradient(90deg,#5C6BC8,#8E9CE0); }
+  .kpi-card.teal::before   { background:linear-gradient(90deg,#28A99E,#5CC8C2); }
+  .kpi-card.green::before  { background:linear-gradient(90deg,#2EA870,#58C890); }
+  .kpi-card.coral::before  { background:linear-gradient(90deg,#D9524B,#EE8880); }
+  .kpi-card.purple::before { background:linear-gradient(90deg,#7A5CC8,#A88EE0); }
+
+  .kpi-label {
+    font-size:10px; font-weight:700; color:var(--text-muted);
+    letter-spacing:0.6px; text-transform:uppercase; margin-bottom:10px;
+  }
+  .kpi-value { font-size:28px; font-weight:800; line-height:1; margin-bottom:6px; }
+  .kpi-card.blue   .kpi-value { color:var(--accent); }
+  .kpi-card.teal   .kpi-value { color:var(--teal); }
+  .kpi-card.green  .kpi-value { color:var(--green); }
+  .kpi-card.coral  .kpi-value { color:var(--coral); }
+  .kpi-card.purple .kpi-value { color:var(--purple); }
+  .kpi-sub  { font-size:11px; color:var(--text-faint); }
+  .kpi-icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:30px; opacity:0.09; }
+
+  /* ── TABS ───────────────────────────────────── */
+  .tab-nav {
+    display:flex; gap:3px;
+    background: var(--bg-inset);
+    padding:5px; border-radius:14px;
+    margin-bottom:24px;
+    width: fit-content;
+  }
+  .tab-btn {
+    padding:10px 18px; border:none;
+    background:transparent; border-radius:10px;
+    color:var(--text-muted);
+    font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; font-weight:500; cursor:pointer;
+    transition:all 0.2s;
+    display:flex; align-items:center; gap:6px;
+  }
+  .tab-btn:hover { color:var(--text-sub); background:rgba(255,255,255,0.5); }
+  .tab-btn.active {
+    background:#fff; color:var(--accent);
+    font-weight:700;
+    box-shadow: 0 1px 6px rgba(26,31,53,0.12);
+  }
+  .tab-btn .tab-icon { font-size:13px; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ── CHART CARDS ────────────────────────────── */
+  .chart-row { display:grid; gap:16px; margin-bottom:16px; }
+  .chart-row-2    { grid-template-columns:1fr 1fr; }
+  .chart-row-3    { grid-template-columns:2fr 1fr 1fr; }
+  .chart-row-full { grid-template-columns:1fr; }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius:16px; padding:22px;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow 0.2s;
+  }
+  .chart-card:hover { box-shadow: var(--shadow-sm); }
+  .chart-card-title {
+    font-size:13px; font-weight:700; color:var(--text);
+    margin-bottom:3px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .chart-card-title::before {
+    content:''; display:block;
+    width:3px; height:14px;
+    background:var(--accent); border-radius:2px;
+  }
+  .chart-card-sub { font-size:11px; color:var(--text-muted); margin-bottom:18px; }
+  .chart-wrap { position:relative; }
+
+  /* ── TABLE CONTROLS ─────────────────────────── */
+  .table-controls { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+  .search-box {
+    flex:1; min-width:200px;
+    background:var(--bg-card); border:1.5px solid var(--border);
+    border-radius:10px; padding:10px 14px;
+    color:var(--text); font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .search-box:focus { border-color:var(--accent); box-shadow: 0 0 0 3px var(--accent-pale); }
+  .search-box::placeholder { color:var(--text-faint); }
+  .filter-select {
+    background:var(--bg-card); border:1.5px solid var(--border);
+    border-radius:10px; padding:10px 14px;
+    color:var(--text); font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; outline:none; cursor:pointer; transition:border-color 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .filter-select:focus { border-color:var(--accent); }
+
+  /* ── DATA TABLE ─────────────────────────────── */
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .data-table thead th {
+    padding:12px 14px; text-align:left;
+    font-size:10px; font-weight:700; color:var(--text-muted);
+    letter-spacing:0.5px; text-transform:uppercase;
+    background:var(--bg); border-bottom:2px solid var(--border-mid);
+    cursor:pointer; user-select:none; white-space:nowrap; transition:color 0.2s;
+  }
+  .data-table thead th:hover { color:var(--accent); }
+  .data-table tbody tr {
+    border-bottom:1px solid var(--border);
+    transition:background 0.15s; cursor:pointer;
+  }
+  .data-table tbody tr:hover { background:rgba(92,107,200,0.05); }
+  .data-table tbody td { padding:12px 14px; color:var(--text); vertical-align:middle; }
+
+  /* rank badges */
+  .rank-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%;
+    font-size:11px; font-weight:700;
+  }
+  .rank-1 { background:#FFF8E2; color:#9A7200; border:1.5px solid #E8C830; }
+  .rank-2 { background:#F2F4F8; color:#5A6480; border:1.5px solid #C0CAD8; }
+  .rank-3 { background:#FDF0E8; color:#9A5820; border:1.5px solid #D4A060; }
+  .rank-top { background:var(--green-pale); color:var(--green); border:1.5px solid rgba(46,168,112,0.28); }
+  .rank-normal { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
+
+  /* score bars */
+  .score-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .score-bar { flex:1; height:5px; background:var(--bg-inset); border-radius:3px; overflow:hidden; }
+  .score-bar-fill { height:100%; border-radius:3px; transition:width 0.5s ease; }
+  .score-bar-fill.gold  { background:linear-gradient(90deg,#C88818,#E8AE3C); }
+  .score-bar-fill.teal  { background:linear-gradient(90deg,#28A99E,#5CC8C2); }
+  .score-bar-fill.coral { background:linear-gradient(90deg,#D9524B,#EE8880); }
+  .score-bar-fill.green { background:linear-gradient(90deg,#2EA870,#58C890); }
+
+  /* chips */
+  .pct-chip { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .pct-a { background:var(--green-pale);  color:var(--green); }
+  .pct-b { background:var(--teal-pale);   color:var(--teal); }
+  .pct-c { background:var(--accent-pale); color:var(--accent); }
+  .pct-d { background:var(--amber-pale);  color:var(--amber); }
+  .pct-e { background:var(--coral-pale);  color:var(--coral); }
+
+  .class-chip { display:inline-block; padding:2px 9px; border-radius:8px; font-size:11px; font-weight:600; }
+  .class-1 { background:var(--teal-pale);   color:var(--teal); }
+  .class-2 { background:var(--purple-pale); color:var(--purple); }
+
+  /* flags */
+  .flag { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+  .flag-red    { background:var(--coral); }
+  .flag-yellow { background:var(--amber); }
+  .flag-green  { background:var(--green); }
+
+  /* ── INDIVIDUAL ─────────────────────────────── */
+  .student-selector-wrap {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:20px; margin-bottom:16px;
+    box-shadow:var(--shadow-xs);
+  }
+  .student-selector-label { font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:10px; letter-spacing:0.3px; text-transform:uppercase; }
+  .student-buttons { display:flex; flex-wrap:wrap; gap:7px; }
+  .student-btn {
+    padding:6px 14px; border-radius:20px;
+    border:1.5px solid var(--border); background:var(--bg);
+    color:var(--text-sub); font-family:'Noto Sans KR',sans-serif;
+    font-size:12px; font-weight:500; cursor:pointer; transition:all 0.18s;
+  }
+  .student-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-pale); }
+  .student-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700; box-shadow: 0 2px 8px rgba(92,107,200,0.35); }
+
+  .individual-grid { display:grid; grid-template-columns:300px 1fr; gap:16px; }
+
+  .profile-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:24px; box-shadow:var(--shadow-xs);
+  }
+  .profile-avatar {
+    width:58px; height:58px; border-radius:14px;
+    background:var(--accent-pale);
+    border:2px solid rgba(92,107,200,0.22);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; margin-bottom:14px;
+  }
+  .profile-name  { font-size:20px; font-weight:800; margin-bottom:4px; color:var(--text); }
+  .profile-meta  { font-size:12px; color:var(--text-muted); margin-bottom:18px; }
+
+  .profile-rank-big {
+    text-align:center; padding:14px;
+    background:linear-gradient(135deg,var(--accent-pale),rgba(92,107,200,0.04));
+    border-radius:12px; margin-bottom:16px;
+    border:1px solid rgba(92,107,200,0.14);
+  }
+  .profile-rank-num { font-family:'Bebas Neue',sans-serif; font-size:50px; color:var(--accent); line-height:1; }
+  .profile-rank-label { font-size:11px; color:var(--text-muted); margin-top:3px; }
+
+  .profile-stats { display:flex; flex-direction:column; gap:10px; }
+  .stat-row { display:flex; justify-content:space-between; align-items:center; }
+  .stat-label { font-size:12px; color:var(--text-muted); }
+  .stat-value { font-size:13px; font-weight:700; }
+
+  .stat-bar-row  { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .stat-bar-item { display:flex; flex-direction:column; gap:4px; }
+  .stat-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); }
+  .stat-bar-track { height:6px; background:var(--bg-inset); border-radius:3px; overflow:hidden; }
+  .stat-bar-prog  { height:100%; border-radius:3px; transition:width 0.6s ease; }
+
+  .analysis-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:22px; box-shadow:var(--shadow-xs);
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .radar-wrap { position:relative; height:250px; }
+
+  .counseling-section { margin-top:2px; }
+  .counseling-title {
+    font-size:12px; font-weight:700; color:var(--text);
+    margin-bottom:10px; display:flex; align-items:center; gap:6px;
+    text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .counseling-title::before { content:''; display:block; width:3px; height:13px; background:var(--teal); border-radius:2px; }
+  .counseling-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .counseling-item {
+    padding:13px; border-radius:10px;
+    font-size:12px; line-height:1.65; border-left:3px solid;
+  }
+  .counseling-item.strength { background:var(--green-pale);  border-color:var(--green); }
+  .counseling-item.caution  { background:var(--coral-pale);  border-color:var(--coral); }
+  .counseling-item.action   { background:var(--teal-pale);   border-color:var(--teal); }
+  .counseling-item.info     { background:var(--accent-pale); border-color:var(--accent); }
+  .counseling-item-title { font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:5px; color:var(--text); }
+
+  /* ── COMPARISON ─────────────────────────────── */
+  .comparison-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .comparison-table th {
+    padding:12px 16px; text-align:center;
+    font-size:10px; font-weight:700;
+    border-bottom:2px solid var(--border-mid);
+    background:var(--bg); color:var(--text-muted);
+    letter-spacing:0.4px; text-transform:uppercase;
+  }
+  .comparison-table td {
+    padding:11px 16px; text-align:center;
+    border-bottom:1px solid var(--border); color:var(--text);
+  }
+  .comparison-table tbody tr:hover { background:rgba(92,107,200,0.04); }
+  .comparison-table .label-col { text-align:left; color:var(--text-sub); font-weight:500; }
+
+  /* ── ATTENTION ──────────────────────────────── */
+  .attention-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .attention-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:14px; padding:18px; box-shadow:var(--shadow-xs);
+  }
+  .attention-card-title {
+    font-size:12px; font-weight:700; color:var(--text);
+    margin-bottom:12px; display:flex; align-items:center; gap:6px;
+    padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .attention-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; border-bottom:1px solid var(--border); font-size:12px;
+  }
+  .attention-item:last-child { border-bottom:none; }
+  .attention-name { font-weight:600; display:flex; align-items:center; gap:6px; color:var(--text); }
+
+  /* ── LEGEND ─────────────────────────────────── */
+  .legend-row { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+
+  /* ── MISC ───────────────────────────────────── */
+  .empty-state { text-align:center; padding:60px 20px; }
+  .empty-state .icon { font-size:38px; margin-bottom:12px; }
+  .empty-state p { font-size:13px; color:var(--text-muted); line-height:1.8; }
+  .no-result { text-align:center; padding:28px; color:var(--text-faint); font-size:13px; }
+  .total-score-num { font-weight:700; color:var(--accent-deep); }
+
+  /* ── SCROLLBAR ──────────────────────────────── */
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border-mid); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text-faint); }
+
+  /* ── ANIMATION ──────────────────────────────── */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .fade-in { animation:fadeIn 0.35s ease forwards; }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+  @media (max-width:900px) {
+    .kpi-grid { grid-template-columns:repeat(3,1fr); }
+    .chart-row-2,.chart-row-3 { grid-template-columns:1fr; }
+    .individual-grid { grid-template-columns:1fr; }
+    .attention-grid { grid-template-columns:1fr; }
+    .tab-nav { width:100%; overflow-x:auto; }
+  }
+  @media (max-width:600px) {
+    .kpi-grid { grid-template-columns:1fr 1fr; }
+    .page-title h2 { font-size:30px; }
+    .counseling-cards { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container header-inner">
+    <div class="logo-area">
+      <div class="logo-emblem">🏫</div>
+      <div class="logo-text">
+        <h1>오성중학교 내신 성적 분석 시스템</h1>
+        <p>진학지도용 가내신 데이터 | 담임 교사 전용</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-blue">2027학년도 고교입학 예정</span>
+      <span class="badge badge-teal">1회차 2026-03-09</span>
+      <span class="header-date">📅 2026.03.11 생성</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- PAGE TITLE -->
+  <div class="page-title-section">
+    <div class="page-title">
+      <h2>3학년 <span>가내신</span> 대시보드</h2>
+      <p>※ 고등학교 입학을 위한 진학지도용 참고 자료 (경기도교육청 내신성적 산출 방법 적용)</p>
+    </div>
+    <div class="title-rule"></div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">전체 학생 수</div>
+      <div class="kpi-value">33</div>
+      <div class="kpi-sub">1반 16명 · 2반 17명</div>
+      <div class="kpi-icon">👥</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">전체 평균 총점</div>
+      <div class="kpi-value" id="kpi-avg">—</div>
+      <div class="kpi-sub">최고 <span id="kpi-max">—</span> / 최저 <span id="kpi-min">—</span></div>
+      <div class="kpi-icon">📊</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">1반 평균 총점</div>
+      <div class="kpi-value" id="kpi-c1">—</div>
+      <div class="kpi-sub">16명 기준</div>
+      <div class="kpi-icon">🏆</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">2반 평균 총점</div>
+      <div class="kpi-value" id="kpi-c2">—</div>
+      <div class="kpi-sub">17명 기준</div>
+      <div class="kpi-icon">🥈</div>
+    </div>
+    <div class="kpi-card coral">
+      <div class="kpi-label">상위 30% 이내</div>
+      <div class="kpi-value" id="kpi-top30">—</div>
+      <div class="kpi-sub">석차 백분율 30% 이내</div>
+      <div class="kpi-icon">⭐</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('overview', this)">
+      <span class="tab-icon">📈</span> 전체 현황
+    </button>
+    <button class="tab-btn" onclick="switchTab('students', this)">
+      <span class="tab-icon">📋</span> 학생 목록
+    </button>
+    <button class="tab-btn" onclick="switchTab('individual', this)">
+      <span class="tab-icon">🔍</span> 개인 분석
+    </button>
+    <button class="tab-btn" onclick="switchTab('attention', this)">
+      <span class="tab-icon">⚠️</span> 상담 주목 학생
+    </button>
+  </div>
+
+  <!-- ===== TAB 1: OVERVIEW ===== -->
+  <div id="tab-overview" class="tab-panel active">
+
+    <!-- Row 1: Distribution + Percentile Pie -->
+    <div class="chart-row chart-row-2">
+      <div class="chart-card">
+        <div class="chart-card-title">총점 구간별 분포</div>
+        <div class="chart-card-sub">전체 33명 학생의 내신 총점 분포 현황</div>
+        <div class="chart-wrap" style="height:220px;">
+          <canvas id="chartDistribution"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">석차 등급 분포</div>
+        <div class="chart-card-sub">석차 백분율 기준 5개 구간 분류</div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> 상위 10%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> 11~30%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> 31~50%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> 51~70%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div> 71% 이상</div>
+        </div>
+        <div class="chart-wrap" style="height:170px;">
+          <canvas id="chartPercentilePie"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Class Comparison + Item Analysis -->
+    <div class="chart-row chart-row-2">
+      <div class="chart-card">
+        <div class="chart-card-title">반별 항목 점수 비교</div>
+        <div class="chart-card-sub">1반 vs 2반 교과·출결·봉사 평균 비교</div>
+        <div class="chart-wrap" style="height:230px;">
+          <canvas id="chartClassCompare"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">개인별 총점 순위 (상위 15명)</div>
+        <div class="chart-card-sub">전체 석차 기준 상위 15명 총점 현황</div>
+        <div class="chart-wrap" style="height:230px;">
+          <canvas id="chartTopStudents"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Scatter -->
+    <div class="chart-row chart-row-full">
+      <div class="chart-card">
+        <div class="chart-card-title">교과활동 점수 vs 내신 총점 분포 (반별)</div>
+        <div class="chart-card-sub">각 점은 1명의 학생 — 교과 점수와 총점의 상관관계를 반별로 구분</div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="chartScatter"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Class comparison table -->
+    <div class="chart-card" style="margin-bottom:20px;">
+      <div class="chart-card-title">반별 성적 비교표</div>
+      <div class="chart-card-sub">1반 · 2반 주요 지표 비교</div>
+      <table class="comparison-table" id="classCompareTable">
+        <thead>
+          <tr>
+            <th class="label-col" style="text-align:left">항목</th>
+            <th style="color:var(--teal)">🏷 1반 (16명)</th>
+            <th style="color:var(--purple)">🏷 2반 (17명)</th>
+            <th>전체 평균</th>
+          </tr>
+        </thead>
+        <tbody id="compareTableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ===== TAB 2: STUDENTS ===== -->
+  <div id="tab-students" class="tab-panel">
+    <div class="table-controls">
+      <input type="text" class="search-box" id="searchInput" placeholder="🔍  학생 이름으로 검색..." oninput="filterTable()">
+      <select class="filter-select" id="filterClass" onchange="filterTable()">
+        <option value="all">전체 반</option>
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+      </select>
+      <select class="filter-select" id="filterPct" onchange="filterTable()">
+        <option value="all">전체 구간</option>
+        <option value="a">상위 10% 이내</option>
+        <option value="b">11~30%</option>
+        <option value="c">31~50%</option>
+        <option value="d">51~70%</option>
+        <option value="e">71% 이상</option>
+      </select>
+      <select class="filter-select" id="sortBy" onchange="filterTable()">
+        <option value="rank">학년 석차순</option>
+        <option value="total">총점 높은순</option>
+        <option value="subject">교과점수순</option>
+        <option value="attend">출결점수순</option>
+        <option value="pct">백분율순</option>
+      </select>
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>학년석차</th>
+            <th>반/번호</th>
+            <th>성 명</th>
+            <th>교과활동 점수</th>
+            <th>출결 점수</th>
+            <th>봉사활동 점수</th>
+            <th>학교활동</th>
+            <th>내신 총점</th>
+            <th>석차 백분율</th>
+            <th>등급</th>
+          </tr>
+        </thead>
+        <tbody id="studentTableBody"></tbody>
+      </table>
+      <div id="tableEmpty" class="no-result" style="display:none;">검색 결과가 없습니다.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: INDIVIDUAL ===== -->
+  <div id="tab-individual" class="tab-panel">
+    <div class="student-selector-wrap">
+      <div class="student-selector-label">📌 분석할 학생을 선택하세요</div>
+      <div class="student-buttons" id="studentButtons"></div>
+    </div>
+
+    <div id="individualContent" style="display:none;">
+      <div class="individual-grid">
+        <!-- Left: Profile -->
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">👤</div>
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-meta" id="profileMeta">—</div>
+
+          <div class="profile-rank-big">
+            <div class="profile-rank-num" id="profileRank">—</div>
+            <div class="profile-rank-label">학년 석차 / 전체 33명</div>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">📊 항목별 점수</div>
+            <div class="stat-bar-row" id="profileBars"></div>
+          </div>
+
+          <div class="profile-stats" id="profileStats"></div>
+        </div>
+
+        <!-- Right: Analysis -->
+        <div class="analysis-card">
+          <div>
+            <div class="chart-card-title" style="margin-bottom:4px;">항목별 레이더 분석</div>
+            <div class="chart-card-sub">교과·출결·봉사·학교활동 점수 비율 비교</div>
+            <div class="radar-wrap">
+              <canvas id="chartRadar"></canvas>
+            </div>
+          </div>
+
+          <div class="counseling-section">
+            <div class="counseling-title">상담 포인트 분석</div>
+            <div class="counseling-cards" id="counselingCards"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="individualEmpty" class="empty-state">
+      <div class="icon">👆</div>
+      <p>위에서 학생을 선택하면<br>상세 분석 및 상담 포인트가 표시됩니다.</p>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: ATTENTION ===== -->
+  <div id="tab-attention" class="tab-panel">
+    <div class="attention-grid">
+      <div class="attention-card">
+        <div class="attention-card-title">
+          <span class="flag flag-red"></span>
+          출결 점수 미달 학생 (20점 미만)
+        </div>
+        <div id="attendanceAlert"></div>
+      </div>
+      <div class="attention-card">
+        <div class="attention-card-title">
+          <span class="flag flag-yellow"></span>
+          봉사활동 점수 미달 학생 (20점 미만)
+        </div>
+        <div id="volunteerAlert"></div>
+      </div>
+    </div>
+    <div class="attention-grid">
+      <div class="attention-card">
+        <div class="attention-card-title">
+          <span class="flag flag-red"></span>
+          하위 30% 이상 학생 (집중 관리 대상)
+        </div>
+        <div id="lowRankAlert"></div>
+      </div>
+      <div class="attention-card">
+        <div class="attention-card-title">
+          <span class="flag flag-green"></span>
+          상위 10% 우수 학생
+        </div>
+        <div id="topStudentAlert"></div>
+      </div>
+    </div>
+
+    <!-- 전체 상담 체크리스트 -->
+    <div class="chart-card">
+      <div class="chart-card-title">📋 학생별 상담 현황 매트릭스</div>
+      <div class="chart-card-sub">각 학생의 주의 항목 한눈에 파악</div>
+      <div style="overflow-x:auto; margin-top:12px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>학생명</th>
+              <th>반</th>
+              <th>총점</th>
+              <th>백분율</th>
+              <th>출결미달</th>
+              <th>봉사미달</th>
+              <th>성적하위</th>
+              <th>상담 우선도</th>
+            </tr>
+          </thead>
+          <tbody id="counselingMatrix"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:40px;"></div>
+
+</div><!-- /container -->
+
+<script>
+// =============================================
+// 1. 데이터
+// =============================================
+const STUDENTS = [
+  {班:1, 번호:1,  이름:'정날린', 교과:86.97,   출결:20.0, 봉사:20.0, 학교:8.0, 총점:134.97,  석차:28, 백분율:84.848},
+  {班:1, 번호:2,  이름:'김가은', 교과:95.344,  출결:20.0, 봉사:20.0, 학교:8.0, 총점:143.344, 석차:21, 백분율:63.636},
+  {班:1, 번호:3,  이름:'김아민', 교과:101.44,  출결:14.0, 봉사:13.0, 학교:8.0, 총점:136.44,  석차:26, 백분율:78.788},
+  {班:1, 번호:4,  이름:'김예원', 교과:116.544, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:164.544, 석차:14, 백분율:42.424},
+  {班:1, 번호:5,  이름:'김주원', 교과:91.551,  출결:14.6, 봉사:20.0, 학교:8.0, 총점:134.151, 석차:29, 백분율:87.879},
+  {班:1, 번호:6,  이름:'문서연', 교과:145.935, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:193.935, 석차:1,  백분율:3.030},
+  {班:1, 번호:7,  이름:'박가연', 교과:127.032, 출결:20.0, 봉사:18.0, 학교:8.0, 총점:173.032, 석차:9,  백분율:27.273},
+  {班:1, 번호:8,  이름:'신서겸', 교과:90.05,   출결:20.0, 봉사:20.0, 학교:8.0, 총점:138.05,  석차:24, 백분율:72.727},
+  {班:1, 번호:9,  이름:'양대원', 교과:75.7,    출결:16.4, 봉사:12.0, 학교:8.0, 총점:112.1,   석차:33, 백분율:100.0},
+  {班:1, 번호:10, 이름:'양인석', 교과:109.937, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:157.937, 석차:17, 백분율:51.515},
+  {班:1, 번호:11, 이름:'양하율', 교과:107.743, 출결:19.4, 봉사:19.0, 학교:8.0, 총점:154.143, 석차:18, 백분율:54.545},
+  {班:1, 번호:12, 이름:'임채현', 교과:136.533, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:184.533, 석차:5,  백분율:15.152},
+  {班:1, 번호:13, 이름:'최지유', 교과:145.706, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:193.706, 석차:2,  백분율:6.061},
+  {班:1, 번호:14, 이름:'하도연', 교과:121.194, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:169.194, 석차:11, 백분율:33.333},
+  {班:1, 번호:15, 이름:'한승율', 교과:141.274, 출결:20.0, 봉사:18.0, 학교:8.0, 총점:187.274, 석차:4,  백분율:12.121},
+  {班:1, 번호:16, 이름:'허여준', 교과:78.843,  출결:20.0, 봉사:19.0, 학교:8.0, 총점:125.843, 석차:30, 백분율:90.909},
+  {班:2, 번호:1,  이름:'김세은', 교과:116.573, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:164.573, 석차:13, 백분율:39.394},
+  {班:2, 번호:2,  이름:'김예은', 교과:145.023, 출결:20.0, 봉사:19.0, 학교:8.0, 총점:192.023, 석차:3,  백분율:9.091},
+  {班:2, 번호:3,  이름:'문은택', 교과:94.371,  출결:20.0, 봉사:20.0, 학교:8.0, 총점:142.371, 석차:22, 백분율:66.667},
+  {班:2, 번호:4,  이름:'박선율', 교과:114.707, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:162.707, 석차:15, 백분율:45.455},
+  {班:2, 번호:5,  이름:'박윤호', 교과:82.989,  출결:12.2, 봉사:18.0, 학교:8.0, 총점:121.189, 석차:31, 백분율:93.939},
+  {班:2, 번호:6,  이름:'박제희', 교과:127.937, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:175.937, 석차:8,  백분율:24.242},
+  {班:2, 번호:7,  이름:'박하민', 교과:99.62,   출결:20.0, 봉사:20.0, 학교:8.0, 총점:147.62,  석차:20, 백분율:60.606},
+  {班:2, 번호:8,  이름:'배유진', 교과:122.26,  출결:20.0, 봉사:19.0, 학교:8.0, 총점:169.26,  석차:10, 백분율:30.303},
+  {班:2, 번호:9,  이름:'안소율', 교과:129.697, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:177.697, 석차:7,  백분율:21.212},
+  {班:2, 번호:10, 이름:'이환희', 교과:76.993,  출결:16.3, 봉사:14.0, 학교:8.0, 총점:115.293, 석차:32, 백분율:96.970},
+  {班:2, 번호:11, 이름:'임소율', 교과:135.098, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:183.098, 석차:6,  백분율:18.182},
+  {班:2, 번호:12, 이름:'지현우', 교과:93.631,  출결:20.0, 봉사:14.0, 학교:8.0, 총점:135.631, 석차:27, 백분율:81.818},
+  {班:2, 번호:13, 이름:'하도율', 교과:99.516,  출결:18.6, 봉사:12.0, 학교:8.0, 총점:138.116, 석차:23, 백분율:69.697},
+  {班:2, 번호:14, 이름:'한주형', 교과:88.83,   출결:20.0, 봉사:20.0, 학교:8.0, 총점:136.83,  석차:25, 백분율:75.758},
+  {班:2, 번호:15, 이름:'황도윤', 교과:118.054, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:166.054, 석차:12, 백분율:36.364},
+  {班:2, 번호:16, 이름:'황은비', 교과:100.865, 출결:20.0, 봉사:20.0, 학교:8.0, 총점:148.865, 석차:19, 백분율:57.576},
+  {班:2, 번호:17, 이름:'최예준', 교과:114.03,  출결:20.0, 봉사:20.0, 학교:8.0, 총점:162.03,  석차:16, 백분율:48.485},
+];
+
+const MAX_SUBJECT = 160;
+const MAX_ATTEND = 20;
+const MAX_VOLUNTEER = 20;
+const MAX_SCHOOL = 8;
+const MAX_TOTAL = MAX_SUBJECT + MAX_ATTEND + MAX_VOLUNTEER + MAX_SCHOOL;
+
+// =============================================
+// 2. 유틸리티 함수
+// =============================================
+const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+const fmt = (n, d=1) => n.toFixed(d);
+
+function getPctClass(pct) {
+  if (pct <= 10) return 'pct-a';
+  if (pct <= 30) return 'pct-b';
+  if (pct <= 50) return 'pct-c';
+  if (pct <= 70) return 'pct-d';
+  return 'pct-e';
+}
+function getPctLabel(pct) {
+  if (pct <= 10) return '상위 10%';
+  if (pct <= 30) return '상위 30%';
+  if (pct <= 50) return '상위 50%';
+  if (pct <= 70) return '상위 70%';
+  return '하위권';
+}
+function getRankBadge(rank) {
+  if (rank === 1) return `<span class="rank-badge rank-1">1</span>`;
+  if (rank === 2) return `<span class="rank-badge rank-2">2</span>`;
+  if (rank === 3) return `<span class="rank-badge rank-3">3</span>`;
+  if (rank <= 10) return `<span class="rank-badge rank-top">${rank}</span>`;
+  return `<span class="rank-badge rank-normal">${rank}</span>`;
+}
+
+// =============================================
+// 3. KPI 계산
+// =============================================
+function initKPIs() {
+  const totals = STUDENTS.map(s => s.총점);
+  const all_avg = avg(totals);
+  const c1 = STUDENTS.filter(s=>s.班===1);
+  const c2 = STUDENTS.filter(s=>s.班===2);
+  const c1avg = avg(c1.map(s=>s.총점));
+  const c2avg = avg(c2.map(s=>s.총점));
+  const top30 = STUDENTS.filter(s=>s.백분율<=30).length;
+
+  document.getElementById('kpi-avg').textContent = fmt(all_avg);
+  document.getElementById('kpi-max').textContent = fmt(Math.max(...totals));
+  document.getElementById('kpi-min').textContent = fmt(Math.min(...totals));
+  document.getElementById('kpi-c1').textContent = fmt(c1avg);
+  document.getElementById('kpi-c2').textContent = fmt(c2avg);
+  document.getElementById('kpi-top30').textContent = top30 + '명';
+}
+
+// =============================================
+// 4. 차트 초기화
+// =============================================
+const CHART_DEFAULTS = {
+  plugins: { legend: { labels: { color: '#7A8298', font: { family: 'Noto Sans KR', size: 11 } } } }
+};
+Chart.defaults.color = '#7A8298';
+Chart.defaults.font.family = 'Noto Sans KR';
+
+let radarChart = null;
+
+function initCharts() {
+  // 4-1. 총점 구간 분포
+  const bins = [[110,130],[130,140],[140,150],[150,160],[160,170],[170,180],[180,190],[190,200]];
+  const binLabels = bins.map(b=>`${b[0]}~${b[1]}`);
+  const c1data = bins.map(b => STUDENTS.filter(s=>s.班===1 && s.총점>=b[0] && s.총점<b[1]).length);
+  const c2data = bins.map(b => STUDENTS.filter(s=>s.班===2 && s.총점>=b[0] && s.총점<b[1]).length);
+
+  new Chart(document.getElementById('chartDistribution'), {
+    type: 'bar',
+    data: {
+      labels: binLabels,
+      datasets: [
+        { label: '1반', data: c1data, backgroundColor: 'rgba(40,169,158,0.65)', borderColor: 'rgba(40,169,158,1)', borderWidth:1, borderRadius:5 },
+        { label: '2반', data: c2data, backgroundColor: 'rgba(122,92,200,0.65)', borderColor: 'rgba(122,92,200,1)', borderWidth:1, borderRadius:5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#7A8298' } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}명` } } },
+      scales: {
+        x: { grid: { color: 'rgba(26,31,53,0.07)' }, ticks: { color: '#A8B0C4', font:{size:10} } },
+        y: { grid: { color: 'rgba(26,31,53,0.07)' }, ticks: { color: '#A8B0C4', stepSize: 1 } }
+      }
+    }
+  });
+
+  // 4-2. 백분율 파이
+  const pctCounts = [
+    STUDENTS.filter(s=>s.백분율<=10).length,
+    STUDENTS.filter(s=>s.백분율>10&&s.백분율<=30).length,
+    STUDENTS.filter(s=>s.백분율>30&&s.백분율<=50).length,
+    STUDENTS.filter(s=>s.백분율>50&&s.백분율<=70).length,
+    STUDENTS.filter(s=>s.백분율>70).length,
+  ];
+  new Chart(document.getElementById('chartPercentilePie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['상위 10%','11~30%','31~50%','51~70%','71% 이상'],
+      datasets: [{
+        data: pctCounts,
+        backgroundColor: ['rgba(46,168,112,0.82)','rgba(40,169,158,0.82)','rgba(92,107,200,0.82)','rgba(208,139,28,0.82)','rgba(217,82,75,0.82)'],
+        borderColor: 'rgba(245,246,250,0.95)',
+        borderWidth: 2,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}명` } }
+      }
+    }
+  });
+
+  // 4-3. 반별 항목 비교
+  const c1 = STUDENTS.filter(s=>s.班===1);
+  const c2 = STUDENTS.filter(s=>s.班===2);
+  const compareItems = ['교과활동', '출결', '봉사활동'];
+  const c1avgs = [avg(c1.map(s=>s.교과)), avg(c1.map(s=>s.출결)), avg(c1.map(s=>s.봉사))];
+  const c2avgs = [avg(c2.map(s=>s.교과)), avg(c2.map(s=>s.출결)), avg(c2.map(s=>s.봉사))];
+
+  new Chart(document.getElementById('chartClassCompare'), {
+    type: 'bar',
+    data: {
+      labels: compareItems,
+      datasets: [
+        { label: '1반 평균', data: c1avgs.map(v=>+v.toFixed(2)), backgroundColor: 'rgba(40,169,158,0.65)', borderColor:'rgba(40,169,158,1)', borderWidth:1, borderRadius:6 },
+        { label: '2반 평균', data: c2avgs.map(v=>+v.toFixed(2)), backgroundColor: 'rgba(122,92,200,0.65)', borderColor:'rgba(122,92,200,1)', borderWidth:1, borderRadius:6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { labels: { color:'#7A99BB' } }, tooltip: { callbacks: { label: ctx=>`  ${ctx.dataset.label}: ${ctx.raw}점` } } },
+      scales: {
+        x: { grid: { color: 'rgba(26,31,53,0.07)' }, ticks: { color:'#4A6A88' } },
+        y: { grid: { color: 'rgba(26,31,53,0.07)' }, ticks: { color:'#7A99BB' } }
+      }
+    }
+  });
+
+  // 4-4. 상위 15명 바 차트
+  const top15 = [...STUDENTS].sort((a,b)=>a.석차-b.석차).slice(0,15);
+  new Chart(document.getElementById('chartTopStudents'), {
+    type: 'bar',
+    data: {
+      labels: top15.map(s=>`${s.이름}(${s.班}반)`),
+      datasets: [{
+        label: '내신 총점',
+        data: top15.map(s=>s.총점),
+        backgroundColor: top15.map((s,i)=> i<3 ? 'rgba(92,107,200,0.88)' : s.班===1?'rgba(40,169,158,0.60)':'rgba(122,92,200,0.60)'),
+        borderColor: top15.map((s,i)=> i<3 ? 'rgba(92,107,200,1)' : s.班===1?'rgba(40,169,158,1)':'rgba(122,92,200,1)'),
+        borderWidth: 1, borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx=>`  총점: ${ctx.raw.toFixed(2)}점` } } },
+      scales: {
+        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#4A6A88', maxRotation:45, font:{size:9}} },
+        y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#4A6A88'}, min:100 }
+      }
+    }
+  });
+
+  // 4-5. 산점도
+  const c1scatter = STUDENTS.filter(s=>s.班===1).map(s=>({x:s.교과, y:s.총점, label:s.이름}));
+  const c2scatter = STUDENTS.filter(s=>s.班===2).map(s=>({x:s.교과, y:s.총점, label:s.이름}));
+  new Chart(document.getElementById('chartScatter'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label:'1반', data: c1scatter, backgroundColor:'rgba(40,169,158,0.72)', borderColor:'rgba(40,169,158,0.95)', pointRadius:7, pointHoverRadius:10 },
+        { label:'2반', data: c2scatter, backgroundColor:'rgba(122,92,200,0.72)', borderColor:'rgba(122,92,200,0.95)', pointRadius:7, pointHoverRadius:10 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels:{color:'#7A99BB'} },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const all = [...c1scatter,...c2scatter];
+              const pt = all.find(p=>Math.abs(p.x-ctx.raw.x)<0.01 && Math.abs(p.y-ctx.raw.y)<0.01);
+              return pt ? ` ${pt.label}: 교과 ${pt.x.toFixed(1)} / 총점 ${pt.y.toFixed(1)}` : '';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#4A6A88'}, title:{display:true, text:'교과활동 점수', color:'#4A6A88'} },
+        y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#4A6A88'}, title:{display:true, text:'내신 총점', color:'#4A6A88'} }
+      }
+    }
+  });
+}
+
+// =============================================
+// 5. 비교표
+// =============================================
+function initCompareTable() {
+  const c1 = STUDENTS.filter(s=>s.班===1);
+  const c2 = STUDENTS.filter(s=>s.班===2);
+  const all = STUDENTS;
+
+  const rows = [
+    { label:'학생 수', c1: c1.length+'명', c2: c2.length+'명', all: all.length+'명' },
+    { label:'평균 총점', c1: fmt(avg(c1.map(s=>s.총점))), c2: fmt(avg(c2.map(s=>s.총점))), all: fmt(avg(all.map(s=>s.총점))) },
+    { label:'최고 총점', c1: fmt(Math.max(...c1.map(s=>s.총점))), c2: fmt(Math.max(...c2.map(s=>s.총점))), all: fmt(Math.max(...all.map(s=>s.총점))) },
+    { label:'최저 총점', c1: fmt(Math.min(...c1.map(s=>s.총점))), c2: fmt(Math.min(...c2.map(s=>s.총점))), all: fmt(Math.min(...all.map(s=>s.총점))) },
+    { label:'교과 평균', c1: fmt(avg(c1.map(s=>s.교과))), c2: fmt(avg(c2.map(s=>s.교과))), all: fmt(avg(all.map(s=>s.교과))) },
+    { label:'출결 평균', c1: fmt(avg(c1.map(s=>s.출결))), c2: fmt(avg(c2.map(s=>s.출결))), all: fmt(avg(all.map(s=>s.출결))) },
+    { label:'봉사 평균', c1: fmt(avg(c1.map(s=>s.봉사))), c2: fmt(avg(c2.map(s=>s.봉사))), all: fmt(avg(all.map(s=>s.봉사))) },
+    { label:'상위 10% 인원', c1: c1.filter(s=>s.백분율<=10).length+'명', c2: c2.filter(s=>s.백분율<=10).length+'명', all: all.filter(s=>s.백분율<=10).length+'명' },
+    { label:'상위 30% 인원', c1: c1.filter(s=>s.백분율<=30).length+'명', c2: c2.filter(s=>s.백분율<=30).length+'명', all: all.filter(s=>s.백분율<=30).length+'명' },
+    { label:'출결 미달 인원', c1: c1.filter(s=>s.출결<20).length+'명', c2: c2.filter(s=>s.출결<20).length+'명', all: all.filter(s=>s.출결<20).length+'명' },
+    { label:'봉사 미달 인원', c1: c1.filter(s=>s.봉사<20).length+'명', c2: c2.filter(s=>s.봉사<20).length+'명', all: all.filter(s=>s.봉사<20).length+'명' },
+  ];
+
+  const tbody = document.getElementById('compareTableBody');
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="label-col">${r.label}</td>
+      <td style="color:var(--teal)">${r.c1}</td>
+      <td style="color:var(--purple)">${r.c2}</td>
+      <td>${r.all}</td>
+    </tr>
+  `).join('');
+}
+
+// =============================================
+// 6. 학생 목록 테이블
+// =============================================
+function renderStudentTable(list) {
+  const tbody = document.getElementById('studentTableBody');
+  if (!list.length) {
+    tbody.innerHTML = '';
+    document.getElementById('tableEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('tableEmpty').style.display = 'none';
+
+  tbody.innerHTML = list.map(s => {
+    const pctCls = getPctClass(s.백분율);
+    const pctLbl = getPctLabel(s.백분율);
+    const subjectPct = (s.교과/MAX_SUBJECT*100).toFixed(0);
+    const attendPct = (s.출결/MAX_ATTEND*100).toFixed(0);
+    const volunteerPct = (s.봉사/MAX_VOLUNTEER*100).toFixed(0);
+    const totalPct = (s.총점/MAX_TOTAL*100).toFixed(0);
+
+    return `<tr onclick="openIndividual('${s.이름}')">
+      <td>${getRankBadge(s.석차)}</td>
+      <td><span class="class-chip class-${s.班}">${s.班}반</span> ${s.번호}번</td>
+      <td><strong>${s.이름}</strong></td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill gold" style="width:${subjectPct}%"></div></div>
+          <span style="font-size:11px;color:var(--amber);min-width:42px">${s.교과.toFixed(1)}</span>
+        </div>
+      </td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill teal" style="width:${attendPct}%"></div></div>
+          <span style="font-size:11px;color:var(--teal);min-width:32px">${s.출결}</span>
+        </div>
+      </td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill green" style="width:${volunteerPct}%"></div></div>
+          <span style="font-size:11px;color:var(--green);min-width:32px">${s.봉사}</span>
+        </div>
+      </td>
+      <td style="color:var(--text-muted)">${s.학교}</td>
+      <td><span class="total-score-num">${s.총점.toFixed(2)}</span></td>
+      <td>${s.백분율.toFixed(3)}%</td>
+      <td><span class="pct-chip ${pctCls}">${pctLbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.trim();
+  const cls = document.getElementById('filterClass').value;
+  const pct = document.getElementById('filterPct').value;
+  const sort = document.getElementById('sortBy').value;
+
+  let list = [...STUDENTS];
+  if (q) list = list.filter(s=>s.이름.includes(q));
+  if (cls !== 'all') list = list.filter(s=>s.班===parseInt(cls));
+  if (pct !== 'all') {
+    const ranges = {a:[0,10], b:[10.01,30], c:[30.01,50], d:[50.01,70], e:[70.01,100]};
+    const [mn,mx] = ranges[pct];
+    list = list.filter(s=>s.백분율>=mn && s.백분율<=mx);
+  }
+
+  const sorts = {
+    rank: (a,b)=>a.석차-b.석차,
+    total: (a,b)=>b.총점-a.총점,
+    subject: (a,b)=>b.교과-a.교과,
+    attend: (a,b)=>b.출결-a.출결,
+    pct: (a,b)=>a.백분율-b.백분율,
+  };
+  list.sort(sorts[sort]);
+  renderStudentTable(list);
+}
+
+// =============================================
+// 7. 개인 분석
+// =============================================
+function initStudentButtons() {
+  const wrap = document.getElementById('studentButtons');
+  const sorted = [...STUDENTS].sort((a,b)=>a.班-b.班||a.번호-b.번호);
+  wrap.innerHTML = sorted.map(s=>
+    `<button class="student-btn" onclick="showIndividual('${s.이름}', this)">${s.班}반 ${s.이름}</button>`
+  ).join('');
+}
+
+function openIndividual(name) {
+  switchTab('individual', document.querySelector('.tab-btn:nth-child(3)'));
+  setTimeout(() => {
+    const btn = [...document.querySelectorAll('.student-btn')].find(b=>b.textContent.includes(name));
+    if (btn) showIndividual(name, btn);
+  }, 100);
+}
+
+function showIndividual(name, btn) {
+  document.querySelectorAll('.student-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const s = STUDENTS.find(st=>st.이름===name);
+  if (!s) return;
+
+  document.getElementById('individualEmpty').style.display = 'none';
+  document.getElementById('individualContent').style.display = 'block';
+
+  // Profile
+  document.getElementById('profileName').textContent = s.이름;
+  document.getElementById('profileMeta').textContent = `3학년 ${s.班}반 ${s.번호}번`;
+  document.getElementById('profileRank').textContent = `${s.석차}위`;
+
+  // Bars
+  const bars = [
+    { label: '교과활동', score: s.교과, max: MAX_SUBJECT, color: '#C88818' },
+    { label: '출결', score: s.출결, max: MAX_ATTEND, color: '#28A99E' },
+    { label: '봉사활동', score: s.봉사, max: MAX_VOLUNTEER, color: '#2EA870' },
+    { label: '학교활동', score: s.학교, max: MAX_SCHOOL, color: '#7A5CC8' },
+  ];
+  document.getElementById('profileBars').innerHTML = bars.map(b=>{
+    const pct = (b.score/b.max*100).toFixed(0);
+    return `<div class="stat-bar-item">
+      <div class="stat-bar-label">
+        <span>${b.label}</span>
+        <span style="color:${b.color}">${b.score.toFixed(1)} / ${b.max}</span>
+      </div>
+      <div class="stat-bar-track">
+        <div class="stat-bar-prog" style="width:${pct}%;background:${b.color}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Stats
+  const all_avg_total = avg(STUDENTS.map(s=>s.총점));
+  const diff = s.총점 - all_avg_total;
+  document.getElementById('profileStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">내신 총점</span><span class="stat-value" style="color:var(--amber)">${s.총점.toFixed(2)}점</span></div>
+    <div class="stat-row"><span class="stat-label">전체 평균 대비</span><span class="stat-value" style="color:${diff>=0?'var(--green)':'var(--coral)'}">${diff>=0?'+':''}${diff.toFixed(2)}점</span></div>
+    <div class="stat-row"><span class="stat-label">석차 백분율</span><span class="stat-value ${getPctClass(s.백분율)}">${s.백분율.toFixed(3)}%</span></div>
+    <div class="stat-row"><span class="stat-label">등급</span><span class="stat-value"><span class="pct-chip ${getPctClass(s.백분율)}">${getPctLabel(s.백분율)}</span></span></div>
+  `;
+
+  // Radar chart
+  if (radarChart) radarChart.destroy();
+  const classmates = STUDENTS.filter(st=>st.班===s.班);
+  const classAvgs = {
+    교과: avg(classmates.map(st=>st.교과)),
+    출결: avg(classmates.map(st=>st.출결)),
+    봉사: avg(classmates.map(st=>st.봉사)),
+    학교: avg(classmates.map(st=>st.학교)),
+  };
+
+  radarChart = new Chart(document.getElementById('chartRadar'), {
+    type: 'radar',
+    data: {
+      labels: [`교과활동\n(/${MAX_SUBJECT})`, `출결\n(/${MAX_ATTEND})`, `봉사활동\n(/${MAX_VOLUNTEER})`, `학교활동\n(/${MAX_SCHOOL})`],
+      datasets: [
+        {
+          label: s.이름,
+          data: [
+            (s.교과/MAX_SUBJECT*100).toFixed(1),
+            (s.출결/MAX_ATTEND*100).toFixed(1),
+            (s.봉사/MAX_VOLUNTEER*100).toFixed(1),
+            (s.학교/MAX_SCHOOL*100).toFixed(1),
+          ],
+          backgroundColor: 'rgba(201,168,76,0.15)',
+          borderColor: 'rgba(201,168,76,0.8)',
+          borderWidth: 2,
+          pointBackgroundColor: '#C88818',
+          pointRadius: 5,
+        },
+        {
+          label: `${s.班}반 평균`,
+          data: [
+            (classAvgs.교과/MAX_SUBJECT*100).toFixed(1),
+            (classAvgs.출결/MAX_ATTEND*100).toFixed(1),
+            (classAvgs.봉사/MAX_VOLUNTEER*100).toFixed(1),
+            (classAvgs.학교/MAX_SCHOOL*100).toFixed(1),
+          ],
+          backgroundColor: 'rgba(58,191,191,0.08)',
+          borderColor: 'rgba(58,191,191,0.5)',
+          borderWidth: 1.5,
+          borderDash: [5,3],
+          pointBackgroundColor: '#28A99E',
+          pointRadius: 4,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#7A99BB', font:{size:11} } } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(26,31,53,0.07)' },
+          angleLines: { color: 'rgba(26,31,53,0.07)' },
+          ticks: { display: false },
+          pointLabels: { color: '#7A8298', font:{size:11} }
+        }
+      }
+    }
+  });
+
+  // Counseling points
+  const counsels = generateCounselingPoints(s, classmates);
+  document.getElementById('counselingCards').innerHTML = counsels.map(c=>`
+    <div class="counseling-item ${c.type}">
+      <div class="counseling-item-title">${c.icon} ${c.title}</div>
+      <div>${c.body}</div>
+    </div>
+  `).join('');
+}
+
+function generateCounselingPoints(s, classmates) {
+  const points = [];
+  const allAvg = avg(STUDENTS.map(st=>st.총점));
+  const classAvgTotal = avg(classmates.map(st=>st.총점));
+
+  // 강점
+  if (s.교과 > avg(STUDENTS.map(st=>st.교과))) {
+    points.push({ type:'strength', icon:'✅', title:'교과 성적 강점', body:`교과활동 점수 ${s.교과.toFixed(1)}점으로 전체 평균(${avg(STUDENTS.map(st=>st.교과)).toFixed(1)})보다 높습니다. 학업 역량이 우수합니다.` });
+  }
+  if (s.출결 === 20) {
+    points.push({ type:'strength', icon:'✅', title:'출결 완벽', body:`출결 점수 만점(20/20)입니다. 성실한 학교 생활 태도를 칭찬해 주세요.` });
+  }
+  if (s.봉사 === 20) {
+    points.push({ type:'strength', icon:'✅', title:'봉사활동 완수', body:`봉사활동 점수 만점(20/20)입니다. 사회 참여 의식이 높습니다.` });
+  }
+  if (s.석차 <= 5) {
+    points.push({ type:'strength', icon:'🏆', title:'학년 최상위권', body:`전체 학년 ${s.석차}위(백분율 ${s.백분율.toFixed(1)}%)의 우수한 성적입니다. 고교 진학 시 유리한 위치입니다.` });
+  }
+
+  // 주의 사항
+  if (s.출결 < 20) {
+    const miss = (20 - s.출결).toFixed(1);
+    points.push({ type:'caution', icon:'⚠️', title:'출결 점수 미달', body:`출결 점수 ${s.출결}점 (${miss}점 감점). 결석·지각·조퇴 이력을 확인하고 출결 개선을 상담하세요.` });
+  }
+  if (s.봉사 < 15) {
+    points.push({ type:'caution', icon:'⚠️', title:'봉사활동 점수 부족', body:`봉사 ${s.봉사}점으로 최고점 대비 ${20-s.봉사}점 부족합니다. 잔여 기간 봉사활동 독려가 필요합니다.` });
+  } else if (s.봉사 < 20) {
+    points.push({ type:'caution', icon:'🔶', title:'봉사활동 추가 필요', body:`봉사 ${s.봉사}점. ${20-s.봉사}점 추가 확보 시 만점 가능합니다. 봉사 기회 안내를 검토하세요.` });
+  }
+  if (s.백분율 > 70) {
+    points.push({ type:'caution', icon:'📣', title:'집중 학습 지원 필요', body:`석차 백분율 ${s.백분율.toFixed(1)}%로 하위권입니다. 학습 방법, 동기 부여, 학습 환경에 대한 심층 상담이 필요합니다.` });
+  }
+  if (s.교과 < avg(STUDENTS.map(st=>st.교과)) - 15) {
+    points.push({ type:'caution', icon:'📚', title:'교과 성적 개선 필요', body:`교과활동 점수 ${s.교과.toFixed(1)}점으로 전체 평균보다 낮습니다. 교과별 취약 부분 파악 후 보충학습을 안내하세요.` });
+  }
+
+  // 실행 계획
+  if (s.백분율 > 30 && s.백분율 <= 70) {
+    points.push({ type:'action', icon:'📋', title:'중위권 향상 전략', body:`현재 ${s.백분율.toFixed(1)}%로 중위권입니다. 교과 점수 집중 향상 시 상위 30% 진입이 가능합니다. 구체적 학습 목표 설정을 상담하세요.` });
+  }
+
+  // 진학 정보
+  const targetPcts = s.백분율 <= 30 ? '우수 일반고 및 특목고 지원' : s.백분율 <= 60 ? '일반고 안정적 지원' : '희망 고교 진학 전략 수립';
+  points.push({ type:'info', icon:'🏫', title:'고교 진학 전략', body:`석차 백분율 ${s.백분율.toFixed(1)}% 기준 → ${targetPcts}을 고려해 보세요. 학부모와 함께 희망 고교 목록을 작성하는 것을 권장합니다.` });
+
+  // 최대 4개
+  return points.slice(0,4);
+}
+
+// =============================================
+// 8. 주목 학생 탭
+// =============================================
+function initAttentionTab() {
+  // 출결 미달
+  const attendList = STUDENTS.filter(s=>s.출결<20).sort((a,b)=>a.출결-b.출결);
+  document.getElementById('attendanceAlert').innerHTML = attendList.length
+    ? attendList.map(s=>`
+      <div class="attention-item">
+        <div class="attention-name">
+          <span class="flag flag-red"></span>
+          ${s.이름} <span class="class-chip class-${s.班}" style="margin-left:4px">${s.班}반</span>
+        </div>
+        <div style="font-size:11px;color:var(--coral)">${s.출결}/20점 (${(20-s.출결).toFixed(1)}점 부족)</div>
+      </div>`).join('')
+    : '<div style="padding:12px;font-size:12px;color:var(--text-dim)">해당 학생 없음</div>';
+
+  // 봉사 미달
+  const volunteerList = STUDENTS.filter(s=>s.봉사<20).sort((a,b)=>a.봉사-b.봉사);
+  document.getElementById('volunteerAlert').innerHTML = volunteerList.length
+    ? volunteerList.map(s=>`
+      <div class="attention-item">
+        <div class="attention-name">
+          <span class="flag flag-yellow"></span>
+          ${s.이름} <span class="class-chip class-${s.班}" style="margin-left:4px">${s.班}반</span>
+        </div>
+        <div style="font-size:11px;color:var(--amber)">${s.봉사}/20점 (${(20-s.봉사).toFixed(1)}점 부족)</div>
+      </div>`).join('')
+    : '<div style="padding:12px;font-size:12px;color:var(--text-dim)">해당 학생 없음</div>';
+
+  // 하위 30%
+  const lowList = STUDENTS.filter(s=>s.백분율>70).sort((a,b)=>b.백분율-a.백분율);
+  document.getElementById('lowRankAlert').innerHTML = lowList.length
+    ? lowList.map(s=>`
+      <div class="attention-item">
+        <div class="attention-name">
+          <span class="flag flag-red"></span>
+          ${s.이름} <span class="class-chip class-${s.班}" style="margin-left:4px">${s.班}반</span>
+        </div>
+        <div style="font-size:11px;color:var(--coral)">${s.석차}위 (${s.백분율.toFixed(1)}%)</div>
+      </div>`).join('')
+    : '<div style="padding:12px;font-size:12px;color:var(--text-dim)">해당 학생 없음</div>';
+
+  // 상위 10%
+  const topList = STUDENTS.filter(s=>s.백분율<=10).sort((a,b)=>a.석차-b.석차);
+  document.getElementById('topStudentAlert').innerHTML = topList.length
+    ? topList.map(s=>`
+      <div class="attention-item">
+        <div class="attention-name">
+          <span class="flag flag-green"></span>
+          ${s.이름} <span class="class-chip class-${s.班}" style="margin-left:4px">${s.班}반</span>
+        </div>
+        <div style="font-size:11px;color:var(--green)">${s.석차}위 (${s.백분율.toFixed(1)}%) · ${s.총점.toFixed(2)}점</div>
+      </div>`).join('')
+    : '<div style="padding:12px;font-size:12px;color:var(--text-dim)">해당 학생 없음</div>';
+
+  // 매트릭스
+  const sorted = [...STUDENTS].sort((a,b)=>a.석차-b.석차);
+  document.getElementById('counselingMatrix').innerHTML = sorted.map(s=>{
+    const isAttendLow = s.출결 < 20;
+    const isVolunteerLow = s.봉사 < 20;
+    const isLowRank = s.백분율 > 70;
+    const priority = (isAttendLow?1:0)+(isVolunteerLow?1:0)+(isLowRank?2:0);
+    let priorityHtml = '';
+    if (priority >= 3) priorityHtml = '<span style="color:var(--coral);font-weight:700">🔴 긴급</span>';
+    else if (priority >= 2) priorityHtml = '<span style="color:var(--amber);font-weight:700">🟡 주의</span>';
+    else if (priority >= 1) priorityHtml = '<span style="color:var(--teal)">🔵 모니터링</span>';
+    else priorityHtml = '<span style="color:var(--text-dim)">✅ 양호</span>';
+
+    return `<tr onclick="openIndividual('${s.이름}')">
+      <td><strong>${s.이름}</strong></td>
+      <td><span class="class-chip class-${s.班}">${s.班}반</span></td>
+      <td>${s.총점.toFixed(2)}</td>
+      <td><span class="pct-chip ${getPctClass(s.백분율)}">${s.백분율.toFixed(1)}%</span></td>
+      <td>${isAttendLow?`<span style="color:var(--coral)">⚠ ${s.출결}점`:'<span style="color:var(--green)">✓ 만점</span>'}</span></td>
+      <td>${isVolunteerLow?`<span style="color:var(--amber)">⚠ ${s.봉사}점`:'<span style="color:var(--green)">✓ 만점</span>'}</span></td>
+      <td>${isLowRank?'<span style="color:var(--coral)">⚠ 하위권</span>':'<span style="color:var(--text-dim)">—</span>'}</td>
+      <td>${priorityHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =============================================
+// 9. 탭 전환
+// =============================================
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// =============================================
+// 10. 초기화
+// =============================================
+window.addEventListener('DOMContentLoaded', () => {
+  initKPIs();
+  initCharts();
+  initCompareTable();
+  filterTable();
+  initStudentButtons();
+  initAttentionTab();
+});
+</script>
+</body>
+</html>
